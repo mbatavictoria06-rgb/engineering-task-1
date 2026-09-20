@@ -1,0 +1,81 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Category {
+  id          String    @id @default(uuid()) @db.Uuid
+  name        String
+  description String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  products    Product[]
+}
+
+model Product {
+  id            String    @id @default(uuid()) @db.Uuid
+  categoryId    String    @db.Uuid
+  name          String
+  description   String?
+  price         Decimal
+  stockQuantity Int
+  isActive      Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  category      Category  @relation(fields: [categoryId], references: [id])
+  orderItems    OrderItem[]
+}
+
+model Customer {
+  id        String    @id @default(uuid()) @db.Uuid
+  firstName String
+  lastName  String
+  email     String    @unique
+  phone     String?
+  city      String?
+  country   String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  orders    Order[]
+}
+
+enum OrderStatus {
+  pending
+  confirmed
+  shipped
+  delivered
+  cancelled
+}
+
+model Order {
+  id          String      @id @default(uuid()) @db.Uuid
+  customerId  String      @db.Uuid
+  status      OrderStatus @default(pending)
+  totalAmount Decimal
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  customer    Customer    @relation(fields: [customerId], references: [id])
+  orderItems  OrderItem[]
+}
+
+model OrderItem {
+  id         String   @id @default(uuid()) @db.Uuid
+  orderId    String   @db.Uuid
+  productId  String   @db.Uuid
+  quantity   Int
+  unitPrice  Decimal
+  createdAt  DateTime @default(now())
+
+  order      Order    @relation(fields: [orderId], references: [id])
+  product    Product  @relation(fields: [productId], references: [id])
+}
