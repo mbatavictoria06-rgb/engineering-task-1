@@ -456,21 +456,50 @@ Ensure PostgreSQL and Node.js are successfully installed on your machine.
 
 ## Public API / Deployment
 
-> **Pending:** The application has not yet been deployed to a public cloud environment. This section will be updated with live URLs once infrastructure is fully provisioned.
+The API is officially deployed and publicly accessible on Render. 
+
+*   **Public API Base URL:** `https://engineering-task-1.onrender.com/api/v1`
+*   **Database:** The production database is a managed PostgreSQL database instance hosted on Render.
+*   **Configuration:** Production environment variables are securely configured within the Render dashboard. The local `.env` file is excluded via `.gitignore` and is not committed to the repository.
+*   **Data Integrity:** The production database was successfully migrated and fully populated using the robust, repeatable seed script (`npx prisma db seed`).
 
 ---
 
 ## Consumer Application
 
-> **Pending:** A minimal frontend consumer application is currently under development. This section will feature instructions on how to interact with the consumer interface once it is stabilized and communicating with the API.
+A minimal, standalone HTML/CSS/JavaScript consumer interface is fully implemented to demonstrate seamless API integration.
+
+*   **Location:** `consumer/index.html`
+*   **Target API:** It directly queries the **public Render API** (`https://engineering-task-1.onrender.com/api/v1`), completely independent of `localhost`.
+*   **Features:**
+    *   Dynamically fetches and displays products.
+    *   Implements active/inactive product filtering directly via the `isActive` API query parameter.
+    *   Demonstrates robust forward pagination leveraging the `limit` and `offset` query parameters.
+    *   Gracefully parses and reacts to the standard `{ data, meta }` JSON response envelope structure.
+*   **Running Locally:** Since the consumer fetches from the live API, you can easily serve the directory locally to test it:
+    ```bash
+    npx serve consumer
+    ```
+    The consumer application has been rigorously tested and verified to successfully communicate with the deployed public API.
 
 ---
 
 ## Task Evidence
 
-*(Reserved for PDF task requirement tracking - To be updated after deployment)*
-*   [ ] Public live API URL
-*   [ ] Terminal `curl` showing pagination
-*   [ ] `429` rate-limit response
-*   [ ] Consumer displaying live API data
-*   [ ] Local verified seed script executing successfully
+The following operational capabilities and edge cases have been rigorously verified against the live, deployed environment:
+
+*   [x] Public health endpoint (`GET /api/v1/health`)
+*   [x] Pagination (Custom `limit` and `offset` validation)
+*   [x] Default pagination (Clamping defaults when absent)
+*   [x] Oversized limit handling (Safely clamping `limit > 100`)
+*   [x] Negative offset handling (HTTP 400 rejection)
+*   [x] Sorting
+*   [x] Invalid sort handling (HTTP 400 rejection)
+*   [x] Product filtering (e.g., `isActive`, `categoryId`)
+*   [x] Malformed UUID handling (HTTP 400 Bad Request)
+*   [x] Nonexistent UUID handling (HTTP 404 Not Found)
+*   [x] HTTP 429 Rate Limiting (Returns HTTP 429 status, standard error envelope, and `Retry-After` / `RateLimit` HTTP headers)
+*   [x] Repeatable production seed execution
+*   [x] Live consumer product data fetching
+*   [x] Consumer pagination interactions
+*   [x] Consumer active/inactive filtering
