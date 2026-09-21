@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Engineering Task 1 - Consumer App</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --surface: rgba(30, 41, 59, 0.7);
+      --border: rgba(255, 255, 255, 0.1);
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --accent: #3b82f6;
+      --accent-hover: #2563eb;
+      --success: #10b981;
+      --danger: #ef4444;
+      --font: 'Inter', system-ui, sans-serif;
+    }
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      background-image: radial-gradient(circle at top right, rgba(59, 130, 246, 0.15), transparent 40%),
+                        radial-gradient(circle at bottom left, rgba(16, 185, 129, 0.1), transparent 40%);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .container {
+      width: 100%;
+      max-width: 1000px;
+      padding: 2rem;
+      box-sizing: border-box;
+    }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+    }
+    h1 {
+      font-size: 2rem;
+      font-weight: 600;
+      margin: 0;
+      background: linear-gradient(to right, #fff, #94a3b8);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .controls {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+    }
+    select, button {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      backdrop-filter: blur(10px);
+      cursor: pointer;
+      outline: none;
+      transition: all 0.2s ease;
+    }
+    select:hover, button:hover:not(:disabled) {
+      border-color: var(--text-muted);
+    }
+    select option {
+      background: #1e293b;
+      color: #fff;
+    }
+    button.primary {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: white;
+    }
+    button.primary:hover:not(:disabled) {
+      background: var(--accent-hover);
+    }
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1.5rem;
+    }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1.5rem;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 1rem;
+    }
+    .card-title {
+      font-weight: 600;
+      font-size: 1.125rem;
+      margin: 0;
+      line-height: 1.4;
+    }
+    .badge {
+      font-size: 0.75rem;
+      font-weight: 500;
+      padding: 0.25rem 0.5rem;
+      border-radius: 9999px;
+      white-space: nowrap;
+    }
+    .badge.active { background: rgba(16, 185, 129, 0.2); color: var(--success); }
+    .badge.inactive { background: rgba(239, 68, 68, 0.2); color: var(--danger); }
+    
+    .price {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--accent);
+    }
+    .stock {
+      font-size: 0.875rem;
+      color: var(--text-muted);
+    }
+    .meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 2rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--border);
+      color: var(--text-muted);
+      font-size: 0.875rem;
+    }
+    
+    .pagination {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    #loading, #error {
+      text-align: center;
+      padding: 3rem;
+      color: var(--text-muted);
+      grid-column: 1 / -1;
+    }
+    #error {
+      color: var(--danger);
+      background: rgba(239, 68, 68, 0.1);
+      border-radius: 12px;
+      border: 1px solid rgba(239, 68, 68, 0.2);
+    }
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid rgba(255,255,255,0.1);
+      border-radius: 50%;
+      border-top-color: var(--accent);
+      animation: spin 1s ease-in-out infinite;
+      margin: 0 auto 1rem;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-in {
+      animation: fadeIn 0.4s ease forwards;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Products</h1>
+      <div class="controls">
+        <select id="filter-active">
+          <option value="">All Statuses</option>
+          <option value="true">Active Only</option>
+          <option value="false">Inactive Only</option>
+        </select>
+      </div>
+    </header>
+
+    <main>
+      <div id="loading">
+        <div class="spinner"></div>
+        <p>Loading products from Render API...</p>
+      </div>
+      
+      <div id="error" style="display: none;"></div>
+      
+      <div id="product-grid" class="grid" style="display: none;"></div>
+      
+      <div class="meta" id="meta-container" style="display: none;">
+        <div id="meta-info">Showing 0-0 of 0 products</div>
+        <div class="pagination">
+          <button id="btn-prev" disabled>Previous</button>
+          <button id="btn-next" disabled class="primary">Next Page</button>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const API_BASE = 'https://engineering-task-1.onrender.com/api/v1';
+    let currentOffset = 0;
+    const limit = 10;
+    let isLoading = false;
+
+    const els = {
+      grid: document.getElementById('product-grid'),
+      loading: document.getElementById('loading'),
+      error: document.getElementById('error'),
+      metaContainer: document.getElementById('meta-container'),
+      metaInfo: document.getElementById('meta-info'),
+      btnPrev: document.getElementById('btn-prev'),
+      btnNext: document.getElementById('btn-next'),
+      filterActive: document.getElementById('filter-active')
+    };
+
+    async function fetchProducts() {
+      if (isLoading) return;
+      
+      isLoading = true;
+      els.loading.style.display = 'block';
+      els.grid.style.display = 'none';
+      els.error.style.display = 'none';
+      els.metaContainer.style.display = 'none';
+
+      try {
+        const isActive = els.filterActive.value;
+        const params = new URLSearchParams({
+          limit: limit.toString(),
+          offset: currentOffset.toString(),
+          sort: 'createdAt',
+          order: 'desc'
+        });
+        
+        if (isActive) {
+          params.append('isActive', isActive);
+        }
+
+        const res = await fetch(`${API_BASE}/products?${params.toString()}`);
+        
+        if (!res.ok) {
+          throw new Error(`API Error: ${res.status} ${res.statusText}`);
+        }
+
+        const json = await res.json();
+        renderProducts(json.data);
+        renderMeta(json.meta);
+        
+      } catch (err) {
+        console.error(err);
+        els.error.innerHTML = `Failed to load products: ${err.message}.<br><br>` + 
+          `<small>Note: If you see a CORS error in the console, the deployed Render API requires CORS middleware to be enabled.</small>`;
+        els.error.style.display = 'block';
+      } finally {
+        isLoading = false;
+        els.loading.style.display = 'none';
+      }
+    }
+
+    function renderProducts(products) {
+      if (!products || products.length === 0) {
+        els.grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 3rem; color: var(--text-muted);">No products found.</div>';
+      } else {
+        els.grid.innerHTML = products.map((p, index) => `
+          <div class="card animate-in" style="animation-delay: ${index * 0.05}s">
+            <div class="card-header">
+              <h3 class="card-title">${escapeHTML(p.name)}</h3>
+              <span class="badge ${p.isActive ? 'active' : 'inactive'}">
+                ${p.isActive ? 'Active' : 'Inactive'}
+              </span>
+            </div>
+            <div class="price">$${parseFloat(p.price).toFixed(2)}</div>
+            <div class="stock">In Stock: ${p.stockQuantity}</div>
+          </div>
+        `).join('');
+      }
+      els.grid.style.display = 'grid';
+    }
+
+    function renderMeta(meta) {
+      if (!meta) return;
+      
+      const start = meta.total === 0 ? 0 : meta.offset + 1;
+      const end = Math.min(meta.offset + meta.limit, meta.total);
+      
+      els.metaInfo.textContent = `Showing ${start}-${end} of ${meta.total} products`;
+      
+      els.btnPrev.disabled = meta.offset === 0;
+      els.btnNext.disabled = !meta.hasMore;
+      
+      els.metaContainer.style.display = 'flex';
+    }
+
+    function escapeHTML(str) {
+      return str.replace(/[&<>'"]/g, 
+        tag => ({
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            "'": '&#39;',
+            '"': '&quot;'
+          }[tag] || tag)
+      );
+    }
+
+    // Event Listeners
+    els.filterActive.addEventListener('change', () => {
+      currentOffset = 0;
+      fetchProducts();
+    });
+
+    els.btnPrev.addEventListener('click', () => {
+      currentOffset = Math.max(0, currentOffset - limit);
+      fetchProducts();
+    });
+
+    els.btnNext.addEventListener('click', () => {
+      currentOffset += limit;
+      fetchProducts();
+    });
+
+    // Initial load
+    fetchProducts();
+  </script>
+</body>
+</html>

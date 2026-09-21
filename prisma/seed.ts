@@ -6,7 +6,12 @@ import { PrismaPg } from '@prisma/adapter-pg';
 import { Pool } from 'pg';
 import { faker } from '@faker-js/faker';
 
-const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: {
+    rejectUnauthorized: false
+  }
+});
 const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
 
@@ -55,6 +60,8 @@ async function main() {
   console.log('Seeding Orders (400) and Order Items (approx. 800)...');
   const statuses = Object.values(OrderStatus);
   
+  const orderOperations = [];
+  
   for (let i = 0; i < 400; i++) {
     const customer = faker.helpers.arrayElement(customers);
     // Average 2 order items per order -> ~800 Order Items
@@ -73,17 +80,21 @@ async function main() {
       };
     });
 
-    await prisma.order.create({
-      data: {
-        customerId: customer.id,
-        status: faker.helpers.arrayElement(statuses),
-        totalAmount,
-        orderItems: {
-          create: orderItemsData,
+    orderOperations.push(
+      prisma.order.create({
+        data: {
+          customerId: customer.id,
+          status: faker.helpers.arrayElement(statuses),
+          totalAmount,
+          orderItems: {
+            create: orderItemsData,
+          },
         },
-      },
-    });
+      })
+    );
   }
+
+  await Promise.all(orderOperations);
 
   console.log('Seed completed successfully.');
 }
